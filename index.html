@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Elite Terminal | FX Edition</title>
+<title>Elite Terminal | Final Fix</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@700&display=swap" rel="stylesheet" />
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
@@ -16,39 +16,33 @@
   body{background:var(--bg); color:var(--text); font-family:var(--mono); padding:15px; min-height:100vh;}
 
   .header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 12px; }
-  .title { font-family: var(--syne); font-size: 18px; font-weight:700; }
-  .subtitle { font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; }
+  .title { font-family:var(--syne); font-size:18px; font-weight:700; color:white; }
+  .subtitle { font-size:9px; color:var(--muted); text-transform:uppercase; letter-spacing:0.1em; }
 
-  .feed-list { display: flex; flex-direction: column; gap: 15px; min-height: 500px; }
+  .feed-list { display: flex; flex-direction: column; gap: 15px; min-height: 450px; }
   
+  /* --- Impact Visuals --- */
   .event-card {
     background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
     padding: 16px; position: relative; overflow: hidden; transition: 0.3s;
   }
 
-  /* --- Priority Animations --- */
-  
-  /* HIGH IMPACT: Fire Border */
+  /* HIGH: Fire Border & Stress Emoji */
   .event-card.high { border-color: var(--red); box-shadow: 0 0 15px rgba(248, 113, 113, 0.1); }
-  .event-card.high::before {
-    content: '🔥'; position: absolute; right: -5px; bottom: -5px; font-size: 40px; opacity: 0.1;
-  }
   .event-card.high::after {
     content: ''; position: absolute; inset: 0; border: 1px solid var(--red); border-radius: 12px;
-    animation: firePulse 2s infinite; pointer-events: none;
+    animation: firePulse 1.5s infinite; pointer-events: none;
   }
-  @keyframes firePulse { 0% { opacity: 0.2; transform: scale(1); } 50% { opacity: 0.5; transform: scale(1.02); } 100% { opacity: 0.2; transform: scale(1); } }
+  @keyframes firePulse { 0% { opacity: 0.1; } 50% { opacity: 0.4; } 100% { opacity: 0.1; } }
 
-  /* LOW IMPACT: Palm/Sunglasses Border */
-  .event-card.low.checked-animation { border-color: var(--green); }
+  /* LOW: Palm Border & Cool Emoji */
+  .event-card.low { border-color: var(--green); }
   .event-card.low::before {
-    content: '🌴'; position: absolute; right: -5px; bottom: -5px; font-size: 40px; opacity: 0.1;
+    content: '🌴'; position: absolute; right: 5px; bottom: 5px; font-size: 30px; opacity: 0.05;
   }
-
-  .impact-emoji { font-size: 18px; margin-right: 10px; }
 
   .meta-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-  .time-box { font-size: 11px; font-weight: 700; color: var(--accent); }
+  .time-box { font-size: 11px; font-weight: 700; color: var(--accent); display: flex; align-items: center; gap: 8px; }
   
   .event-title { font-size: 13px; line-height: 1.5; color: var(--text); margin-bottom: 8px; font-weight: 500; }
   
@@ -56,12 +50,13 @@
   .tag { font-size: 9px; padding: 2px 6px; border-radius: 4px; font-weight: 700; background: var(--bg); border: 1px solid var(--border); }
   .tomorrow-tag { border-color: var(--accent); color: var(--accent); }
   .symbol-tag { border-color: var(--muted); color: var(--text); background: rgba(255,255,255,0.05); }
-  .macro-tag { border-color: var(--red); color: var(--red); }
+  .macro-tag { border-color: var(--red); color: var(--red); text-shadow: 0 0 5px var(--red); }
 
   /* Pagination */
   .pagination { display: flex; justify-content: center; align-items: center; gap: 15px; margin-top: 25px; padding-top: 15px; border-top: 1px solid var(--border); }
-  .nav-btn { background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 11px; }
-  .nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+  .nav-btn { background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 11px; transition: 0.2s; }
+  .nav-btn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+  .nav-btn:disabled { opacity: 0.2; cursor: not-allowed; }
 </style>
 </head>
 <body>
@@ -72,14 +67,14 @@
       <span class="title">Market Terminal</span><br>
       <span class="subtitle">Global Catalyst Feed</span>
     </div>
-    <span id="tz-display" style="font-size: 10px; color: var(--muted);">SYNCING</span>
+    <span id="tz-display" style="font-size: 10px; color: var(--muted);">SYNCING...</span>
   </div>
 
   <div id="feed" class="feed-list"></div>
 
   <div class="pagination">
     <button id="prevBtn" class="nav-btn" onclick="changePage(-1)">← Newer</button>
-    <span id="pageNum" class="page-num" style="font-size:11px; color:var(--muted);">Page 1</span>
+    <span id="pageNum" style="font-size:11px; color:var(--muted);">Page 1</span>
     <button id="nextBtn" class="nav-btn" onclick="changePage(1)">Older →</button>
   </div>
 </div>
@@ -90,31 +85,32 @@
   const itemsPerPage = 5;
 
   const symbolMap = [
-    { keys: /TRUMP|WHITE HOUSE|TARIFF|ELECTION|U.S. GOVT/i, tag: 'MACRO', type: 'macro' },
+    { keys: /TRUMP|WHITE HOUSE|TARIFF|ADMINISTRATION|POTUS/i, tag: 'MACRO', type: 'macro' },
     { keys: /S&P 500|SPX|S&P|BROAD MARKET/i, tag: 'SPX' },
     { keys: /DOW|FORD|BA|BOEING|INDUSTRIAL/i, tag: 'DOW' },
-    { keys: /NASDAQ|TECH|NVIDIA|AI|MSFT|AAPL/i, tag: 'NAS' },
+    { keys: /NASDAQ|TECH|NVIDIA|AI|MSFT|AAPL|GOOG/i, tag: 'NAS' },
     { keys: /FED|FOMC|POWELL|RATE|CPI|INFLATION|USD/i, tag: 'USD' },
-    { keys: /GOLD|XAU|SILVER/i, tag: 'XAU' },
-    { keys: /OIL|CRUDE|OPEC/i, tag: 'NRG' },
-    { keys: /BTC|ETH|CRYPTO/i, tag: 'CRY' }
+    { keys: /BTC|ETH|CRYPTO|BITCOIN/i, tag: 'CRY' }
   ];
 
   async function fetchNews() {
     try {
-      // Fetching a larger count (count=50) to ensure at least 6+ pages
-      const res = await fetch('https://api.rss2json.com/v1/api.json?rss_url=https://www.investing.com/rss/news_25.rss&api_key=your_key_here&count=50');
+      // Increased count to ensure at least 6-10 pages of data
+      const res = await fetch('https://api.rss2json.com/v1/api.json?rss_url=https://www.investing.com/rss/news_25.rss&count=50');
       const data = await res.json();
+      
       if (data.status === 'ok') {
-        allNews = data.items;
+        // --- THE FIX: SORT BY LATEST FIRST ---
+        allNews = data.items.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
         
-        // --- 1. THE SORTING FIX ---
-        // Sorts items by date so Today's news always appears before Tomorrow's news
-        allNews.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
+        document.getElementById('tz-display').textContent = 
+            Intl.DateTimeFormat().resolvedOptions().timeZone.split('/').pop().replace('_', ' ');
         
         renderPage();
       }
-    } catch (e) { console.log("Feed Error"); }
+    } catch (e) {
+      document.getElementById('feed').innerHTML = '<div style="text-align:center; padding:100px 0; color:var(--muted);">Terminal Connection Error</div>';
+    }
   }
 
   function changePage(dir) {
@@ -140,13 +136,15 @@
       const title = item.title;
       const isTom = d.getDate() === tomorrow.getDate();
       
-      // Determine Impact and Visuals
+      // Visual Cues Logic
       let impact = 'low';
       let emoji = '😎'; 
-      if (/FED|FOMC|CPI|RATE|TRUMP|TARIFF|WAR|NFP|POWELL/i.test(title.toUpperCase())) {
+      const upperTitle = title.toUpperCase();
+
+      if (/FED|FOMC|CPI|RATE|TRUMP|TARIFF|WAR|POWELL|NFP/i.test(upperTitle)) {
           impact = 'high';
           emoji = '😰';
-      } else if (/REPORT|INFLATION|JOBS|EARNINGS/i.test(title.toUpperCase())) {
+      } else if (/REPORT|INFLATION|JOBS|EARNINGS|PLAN/i.test(upperTitle)) {
           impact = 'med';
           emoji = '🧐';
       }
@@ -168,7 +166,7 @@
         <div class="event-card ${impact}">
           <div class="meta-row">
             <div class="time-box">
-                <span class="impact-emoji">${emoji}</span>
+                <span style="font-size:16px;">${emoji}</span>
                 ${h}:${m} ${p}
             </div>
             <div class="tag-row">
@@ -183,7 +181,7 @@
   }
 
   fetchNews();
-  setInterval(fetchNews, 600000);
+  setInterval(fetchNews, 300000); // 5 min sync
 </script>
 </body>
 </html>
