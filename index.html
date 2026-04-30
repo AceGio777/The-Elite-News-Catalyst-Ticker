@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Adaptive Elite Ticker</title>
+<title>Elite Catalyst Sidebar</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@700&display=swap" rel="stylesheet" />
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
@@ -13,131 +13,149 @@
     --green:#4ade80; --orange:#fb923c; --red:#f87171;
     --mono:'DM Mono',monospace; --syne:'Syne',sans-serif;
   }
+  body{background:var(--bg); color:var(--text); font-family:var(--mono); padding:15px; min-height:100vh;}
+
+  .widget-container { width: 100%; max-width: 350px; margin: 0 auto; }
+
+  .header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 12px; }
+  .title { font-family: var(--syne); font-size: 18px; color: var(--text); }
+  .subtitle { font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; }
+
+  /* Feed List */
+  .feed-list { display: flex; flex-direction: column; gap: 10px; }
   
-  body{background:transparent; color:var(--text); font-family:var(--mono); overflow:hidden;}
-
-  .ticker-wrap {
-    width: 100%; background: var(--surface); border: 1px solid var(--border); 
-    border-radius: 8px; height: 34px; display: flex; align-items: center; 
-    position: relative; overflow: hidden;
+  .event-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+    padding: 12px; position: relative; overflow: hidden; transition: 0.2s;
   }
+  .event-card:hover { border-color: var(--muted); }
 
-  .ticker-label {
-    background: var(--surface); padding: 0 12px; height: 100%;
-    display: flex; flex-direction: column; justify-content: center;
-    font-family: var(--syne); font-size: 9px; color: var(--accent);
-    border-right: 1px solid var(--border); z-index: 30; text-transform: uppercase;
-    box-shadow: 10px 0 15px rgba(0,0,0,0.5); /* Shadow to separate text */
-  }
+  .impact-strip { position: absolute; left: 0; top: 0; bottom: 0; width: 3px; }
+  .high { background: var(--red); box-shadow: 0 0 10px var(--red); }
+  .med { background: var(--orange); }
+  .low { background: var(--green); }
 
-  /* The smooth scroll engine */
-  .ticker-move {
-    display: flex; white-space: nowrap;
-    animation: tickerSwim 45s linear infinite;
-    will-change: transform;
-  }
+  .meta-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+  .time-box { font-size: 10px; font-weight: 500; color: var(--accent); display: flex; align-items: center; gap: 5px; }
+  .tz-label { font-size: 8px; color: var(--muted); background: var(--bg); padding: 1px 4px; border-radius: 3px; }
+  
+  .event-title { font-size: 12px; line-height: 1.4; color: var(--text); margin-bottom: 4px; }
+  
+  .tag-row { display: flex; gap: 6px; }
+  .tag { font-size: 8px; padding: 2px 5px; border-radius: 4px; font-weight: 700; background: var(--bg); border: 1px solid var(--border); }
+  .tomorrow-tag { border-color: var(--accent); color: var(--accent); }
+  .market-tag { border-color: var(--muted); color: var(--muted); text-transform: uppercase; }
 
-  .ticker-item {
-    display: inline-flex; align-items: center;
-    margin-right: 50px; font-size: 12px;
-  }
-
-  .dot { width: 8px; height: 8px; border-radius: 50%; margin-right: 10px; flex-shrink:0; }
-  .tag { font-size: 9px; font-weight: 800; margin-right: 10px; color: var(--accent); opacity: 0.8; }
-  .time { color: var(--muted); margin-right: 10px; font-size: 10px; }
-
-  @keyframes tickerSwim {
-    0% { transform: translateX(0); }
-    100% { transform: translateX(-50%); }
-  }
-
-  /* Desktop/Mobile specific font-size adjustments */
-  @media (max-width: 600px) {
-    .ticker-item { font-size: 11px; margin-right: 30px; }
-    .ticker-label { font-size: 8px; padding: 0 8px; }
-    .ticker-move { animation-duration: 25s; } /* Faster on small screens to see more news */
-  }
+  /* Legend Footer */
+  .legend { margin-top: 25px; display: flex; justify-content: space-around; padding-top: 15px; border-top: 1px solid var(--border); }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 8px; color: var(--muted); text-transform: uppercase; }
+  .dot { width: 6px; height: 6px; border-radius: 50%; }
 </style>
 </head>
 <body>
 
-<div class="ticker-wrap">
-  <div class="ticker-label">
-    LIVE<span>FEED</span>
+<div class="widget-container">
+  <div class="header">
+    <div>
+      <span class="title">Market Catalysts</span><br>
+      <span class="subtitle">Live Terminal Feed</span>
+    </div>
+    <span id="tz-display" class="tz-label">EST</span>
   </div>
 
-  <div class="ticker-move" id="track">
-    <div class="ticker-item">Initialising terminal stream...</div>
+  <div id="feed" class="feed-list">
+    <div style="text-align:center; padding:40px; color:var(--muted); font-size:11px;">Connecting to data stream...</div>
+  </div>
+
+  <div class="legend">
+    <div class="legend-item"><div class="dot" style="background:var(--green)"></div> Low</div>
+    <div class="legend-item"><div class="dot" style="background:var(--orange)"></div> Medium</div>
+    <div class="legend-item"><div class="dot" style="background:var(--red)"></div> High</div>
   </div>
 </div>
 
 <script>
-  const tz = () => {
+  const marketMap = [
+    { keys: /FED|FOMC|POWELL|USD|TREASURY/, tag: 'USD' },
+    { keys: /TECH|NASDAQ|NVDA|AAPL|GOOG|AI/, tag: 'NAS' },
+    { keys: /DOW|FORD|BA|GM|INDUSTRIAL/, tag: 'DOW' },
+    { keys: /GOLD|XAU|SILVER|METAL/, tag: 'CMD' },
+    { keys: /OIL|CRUDE|ENERGY|OPEC/, tag: 'NRG' }
+  ];
+
+  const getTZ = () => {
     try { return Intl.DateTimeFormat().resolvedOptions().timeZone.split('/').pop().replace('_', ' '); }
     catch(e) { return "EST"; }
   };
 
-  async function getNews() {
+  async function updateFeed() {
+    const feed = document.getElementById('feed');
+    const tzLabel = getTZ();
+    document.getElementById('tz-display').textContent = tzLabel;
+
     try {
       const res = await fetch('https://api.rss2json.com/v1/api.json?rss_url=https://www.investing.com/rss/news_25.rss');
       const data = await res.json();
-      if (data.status === 'ok') build(data.items);
-    } catch (e) { document.getElementById('track').innerHTML = '<div class="ticker-item">Connection lag... retrying</div>'; }
+      if (data.status === 'ok') render(data.items, tzLabel);
+    } catch (e) {
+      feed.innerHTML = '<div style="text-align:center; font-size:10px; color:var(--red);">Feed disconnected. Check internet.</div>';
+    }
   }
 
-  function build(items) {
-    const track = document.getElementById('track');
+  function render(items, tz) {
+    const feed = document.getElementById('feed');
     const now = new Date();
     const tomorrow = new Date(); tomorrow.setDate(now.getDate() + 1);
-    const zone = tz();
-
-    // Market keywords
-    const keys = { 'DOW': /DOW|FORD|BA|TESLA/, 'NAS': /TECH|NVDA|AAPL|GOOG|AI/, 'USD': /FED|FOMC|CPI|POWELL|RATE/ };
-
-    let content = '';
     
-    // Sort oldest to newest to ensure Today is first
-    const sorted = items.sort((a,b) => new Date(a.pubDate) - new Date(b.pubDate));
+    // Filter and Sort: Today and Tomorrow only
+    const events = items
+      .filter(item => {
+        const d = new Date(item.pubDate);
+        return d.getDate() === now.getDate() || d.getDate() === tomorrow.getDate();
+      })
+      .sort((a,b) => new Date(a.pubDate) - new Date(b.pubDate));
 
-    sorted.forEach(item => {
+    if (events.length === 0) {
+      feed.innerHTML = '<div style="text-align:center; font-size:11px; color:var(--muted); padding:20px;">No catalysts remaining for today/tomorrow.</div>';
+      return;
+    }
+
+    feed.innerHTML = events.slice(0, 8).map(item => {
       const d = new Date(item.pubDate);
-      if (d.getDate() !== now.getDate() && d.getDate() !== tomorrow.getDate()) return;
-
-      const isTom = d.getDate() === tomorrow.getDate();
       const title = item.title.toUpperCase();
+      const isTom = d.getDate() === tomorrow.getDate();
       
-      // Impact logic
-      let dot = '#4ade80'; // Low
-      if (/FED|FOMC|CPI|NFP|WAR/i.test(title)) dot = '#f87171'; // High
-      else if (/REPORT|INFLATION|JOBS/i.test(title)) dot = '#fb923c'; // Med
+      let impact = 'low';
+      if (/FED|FOMC|CPI|RATE|NFP|POWELL/i.test(title)) impact = 'high';
+      else if (/DATA|REPORT|JOBS|INFLATION/i.test(title)) impact = 'med';
 
-      // Market Tag
-      let tag = '';
-      for (let k in keys) { if (keys[k].test(title)) tag = `<span class="tag">[${k}]</span>`; }
-
-      // Time 12h
       let h = d.getHours();
       const m = String(d.getMinutes()).padStart(2,'0');
       const p = h >= 12 ? 'PM' : 'AM';
       h = h % 12 || 12;
 
-      content += `
-        <div class="ticker-item">
-          <div class="dot" style="background:${dot}; box-shadow: 0 0 8px ${dot}66"></div>
-          ${isTom ? '<span class="tag" style="color:var(--accent)">TOMORROW</span>' : ''}
-          ${tag}
-          <span class="time">${h}:${m} ${p} ${zone}</span>
-          <span>${item.title}</span>
+      let mktTag = '';
+      for (let m of marketMap) { if (m.keys.test(title)) mktTag = `<span class="tag market-tag">${m.tag}</span>`; }
+
+      return `
+        <div class="event-card">
+          <div class="impact-strip ${impact}"></div>
+          <div class="meta-row">
+            <div class="time-box">${h}:${m} ${p}</div>
+            <div class="tag-row">
+              ${isTom ? '<span class="tag tomorrow-tag">TOMORROW</span>' : ''}
+              ${mktTag}
+            </div>
+          </div>
+          <div class="event-title">${item.title}</div>
         </div>
       `;
-    });
-
-    // Double the content for a seamless loop
-    track.innerHTML = content + content;
+    }).join('');
   }
 
-  getNews();
-  setInterval(getNews, 600000);
+  updateTicker = updateFeed; // Backwards compat
+  updateFeed();
+  setInterval(updateFeed, 600000);
 </script>
 </body>
 </html>
