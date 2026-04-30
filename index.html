@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Elite Market-Aware Ticker</title>
+<title>Elite Market Ticker v7.4</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@700&display=swap" rel="stylesheet" />
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
@@ -21,16 +21,27 @@
     position: relative; overflow: hidden;
   }
 
+  /* Fixed Side Label with Integrated Hover Legend */
   .ticker-label {
     background: var(--surface); padding: 0 15px; height: 100%;
     display: flex; flex-direction: column; justify-content: center;
     font-family: var(--syne); font-size: 10px; color: var(--accent);
-    border-right: 1px solid var(--border); z-index: 10; text-transform: uppercase;
+    border-right: 1px solid var(--border); z-index: 20; text-transform: uppercase;
+    cursor: help; position: relative;
   }
 
-  .legend-trigger {
-    font-size: 8px; color: var(--muted); cursor: pointer; margin-top: 2px; text-decoration: underline;
+  /* Sleek Legend Slide-out */
+  .legend-overlay {
+    position: absolute; left: 100%; top: 0; height: 100%; 
+    background: var(--surface); display: flex; align-items: center;
+    gap: 15px; padding: 0 20px; border-right: 1px solid var(--border);
+    transform: translateX(-100%); transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 15; pointer-events: none;
   }
+  .ticker-label:hover + .legend-overlay { transform: translateX(0); }
+
+  .legend-item { display: flex; align-items: center; font-size: 9px; gap: 6px; white-space: nowrap; color: var(--muted); }
+  .dot { width: 8px; height: 8px; border-radius: 50%; }
 
   .ticker-content {
     display: flex; white-space: nowrap; align-items: center;
@@ -39,16 +50,11 @@
 
   .ticker-item { display: inline-flex; align-items: center; margin-right: 60px; font-size: 13px; }
 
-  /* Impact Bubbles */
-  .impact-dot {
-    width: 10px; height: 10px; border-radius: 50%; margin-right: 12px; flex-shrink: 0;
-    box-shadow: 0 0 8px rgba(255,255,255,0.1);
-  }
-  .impact-low { background: var(--green); box-shadow: 0 0 10px rgba(74, 222, 128, 0.4); }
-  .impact-med { background: var(--orange); box-shadow: 0 0 10px rgba(251, 146, 60, 0.4); }
-  .impact-high { background: var(--red); box-shadow: 0 0 10px rgba(248, 113, 113, 0.4); animation: pulseRed 1.5s infinite; }
+  .impact-dot { width: 10px; height: 10px; border-radius: 50%; margin-right: 12px; flex-shrink: 0; }
+  .impact-low { background: var(--green); box-shadow: 0 0 8px rgba(74, 222, 128, 0.3); }
+  .impact-med { background: var(--orange); box-shadow: 0 0 8px rgba(251, 146, 60, 0.3); }
+  .impact-high { background: var(--red); box-shadow: 0 0 12px rgba(248, 113, 113, 0.4); animation: pulseRed 1.5s infinite; }
 
-  /* Market Tags */
   .market-tag {
     font-size: 9px; padding: 2px 6px; border-radius: 4px; margin-right: 10px;
     font-weight: 700; background: var(--bg); border: 1px solid var(--border); color: var(--accent);
@@ -57,52 +63,53 @@
   .pill-tomorrow { 
     font-size: 9px; padding: 2px 6px; border-radius: 4px; margin-right: 10px;
     color: var(--accent); border: 1px solid var(--accent); font-weight: 700;
-    box-shadow: 0 0 8px rgba(34, 211, 238, 0.2);
   }
+
+  .time-stamp { color: var(--muted); margin-right: 10px; font-size: 11px; font-weight: 500; }
 
   @keyframes pulseRed { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
   @keyframes tickerLoop { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
   .ticker-wrap:hover .ticker-content { animation-play-state: paused; }
-
-  /* Legend Modal */
-  #legend-modal {
-    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
-    padding: 15px; z-index: 1000; display: none; width: 180px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-  }
-  .legend-item { display: flex; align-items: center; font-size: 10px; margin-bottom: 8px; gap: 10px; color: var(--muted); }
 </style>
 </head>
 <body>
 
-<div id="legend-modal" onclick="this.style.display='none'">
-  <div class="legend-item"><div class="impact-dot impact-low"></div> Low Impact</div>
-  <div class="legend-item"><div class="impact-dot impact-med"></div> Medium Impact</div>
-  <div class="legend-item"><div class="impact-dot impact-high"></div> High Impact</div>
-  <div style="font-size: 8px; text-align: center; margin-top: 5px;">(Click to Close)</div>
-</div>
-
 <div class="ticker-wrap">
   <div class="ticker-label">
-    Live Feed
-    <div class="legend-trigger" onclick="document.getElementById('legend-modal').style.display='block'">Legend</div>
+    LIVE FEED
+    <span style="font-size:7px; opacity:0.6; margin-top:2px;">HOVER LEGEND</span>
   </div>
+
+  <div class="legend-overlay">
+    <div class="legend-item"><div class="dot impact-low"></div> LOW</div>
+    <div class="legend-item"><div class="dot impact-med"></div> MEDIUM</div>
+    <div class="legend-item"><div class="dot impact-high"></div> HIGH</div>
+  </div>
+
   <div class="ticker-content" id="ticker-content">
-    <div class="ticker-item">Parsing global catalysts...</div>
+    <div class="ticker-item">Synchronizing with Global Timezones...</div>
   </div>
 </div>
 
 <script>
-  // Market Mapping Logic
   const marketMap = [
-    { keywords: ['DOW', 'DOW JONES', 'INDUSTRIAL', 'AUTOMOTIVE', 'FORD', 'TESLA', 'BOEING'], tag: 'DOW' },
+    { keywords: ['DOW', 'INDUSTRIAL', 'AUTOMOTIVE', 'FORD', 'TESLA', 'BOEING'], tag: 'DOW' },
     { keywords: ['TECH', 'NASDAQ', 'NVIDIA', 'APPLE', 'GOOGLE', 'AI', 'SEMICONDUCTOR'], tag: 'NAS' },
-    { keywords: ['S&P', 'SPX', 'EQUITIES', 'MARKET-WIDE'], tag: 'S&P' },
-    { keywords: ['GOLD', 'XAU', 'SILVER', 'METAL', 'PRECIOUS'], tag: 'CMD' },
-    { keywords: ['OIL', 'CRUDE', 'ENERGY', 'OPEC', 'WTI'], tag: 'NRG' },
-    { keywords: ['BTC', 'ETH', 'CRYPTO', 'BITCOIN', 'COINBASE'], tag: 'CRY' },
-    { keywords: ['USD', 'FED', 'FOMC', 'POWELL', 'TREASURY', 'DOLLAR'], tag: 'USD' }
+    { keywords: ['S&P', 'SPX', 'EQUITIES'], tag: 'S&P' },
+    { keywords: ['GOLD', 'XAU', 'SILVER', 'METAL'], tag: 'CMD' },
+    { keywords: ['OIL', 'CRUDE', 'ENERGY', 'OPEC'], tag: 'NRG' },
+    { keywords: ['BTC', 'ETH', 'CRYPTO', 'BITCOIN'], tag: 'CRY' },
+    { keywords: ['USD', 'FED', 'FOMC', 'POWELL', 'TREASURY'], tag: 'USD' }
   ];
+
+  // Timezone Detection Logic
+  function getUserTimezone() {
+    try {
+      return Intl.DateTimeFormat().resolvedOptions().timeZone.split('/').pop().replace('_', ' ');
+    } catch (e) {
+      return "EST"; // Default fallback
+    }
+  }
 
   async function updateTicker() {
     const tickerContainer = document.getElementById('ticker-content');
@@ -111,25 +118,40 @@
       const data = await response.json();
       if (data.status === 'ok') render(data.items);
     } catch (e) {
-      tickerContainer.innerHTML = '<div class="ticker-item">Searching for data stream...</div>';
+      tickerContainer.innerHTML = '<div class="ticker-item">Fetching data...</div>';
     }
   }
 
   function render(items) {
     const container = document.getElementById('ticker-content');
-    const tomorrow = new Date(); tomorrow.setDate(new Date().getDate() + 1);
+    const now = new Date();
+    const tomorrow = new Date(); tomorrow.setDate(now.getDate() + 1);
+    const tzLabel = getUserTimezone();
+    
     let html = '';
+
+    // Sort: Today's items first, then Tomorrow
+    items.sort((a, b) => new Date(a.pubDate) - new Date(b.pubDate));
 
     items.forEach(item => {
       const title = item.title.toUpperCase();
       const d = new Date(item.pubDate);
+      
+      // Only show Today and Tomorrow (filter out old news)
+      if (d.getDate() !== now.getDate() && d.getDate() !== tomorrow.getDate()) return;
+
       const isTomorrow = d.getDate() === tomorrow.getDate();
       
-      // Determine Market Tag
       const market = marketMap.find(m => m.keywords.some(k => title.includes(k)));
       const tag = market ? `<span class="market-tag">${market.tag}</span>` : '';
 
-      // Determine Impact Bubble
+      // 12-Hour Time Format
+      let hours = d.getHours();
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      hours = hours % 12;
+      hours = hours ? hours : 12;
+      const timeStr = `${hours}:${String(d.getMinutes()).padStart(2,'0')} ${ampm} ${tzLabel}`;
+
       let impactClass = 'impact-low';
       if (/FED|FOMC|CPI|RATE|POWELL|NFP|WAR|EARNINGS/i.test(title)) impactClass = 'impact-high';
       else if (/DATA|REPORT|OUTLOOK|INFLATION|JOBS/i.test(title)) impactClass = 'impact-med';
@@ -139,7 +161,7 @@
           <div class="impact-dot ${impactClass}"></div>
           ${isTomorrow ? '<span class="pill-tomorrow">TOMORROW</span>' : ''}
           ${tag}
-          <span style="color:var(--muted); margin-right:10px;">${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}</span>
+          <span class="time-stamp">${timeStr}</span>
           <span>${item.title}</span>
         </div>
       `;
