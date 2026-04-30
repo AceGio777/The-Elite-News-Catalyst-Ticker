@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Elite Market Ticker v7.4</title>
+<title>Adaptive Elite Ticker</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@700&display=swap" rel="stylesheet" />
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
@@ -13,165 +13,131 @@
     --green:#4ade80; --orange:#fb923c; --red:#f87171;
     --mono:'DM Mono',monospace; --syne:'Syne',sans-serif;
   }
-  body{background:var(--bg); color:var(--text); font-family:var(--mono); padding:10px; overflow:hidden;}
+  
+  body{background:transparent; color:var(--text); font-family:var(--mono); overflow:hidden;}
 
   .ticker-wrap {
     width: 100%; background: var(--surface); border: 1px solid var(--border); 
-    border-radius: 12px; height: 54px; display: flex; align-items: center;
+    border-radius: 8px; height: 34px; display: flex; align-items: center; 
     position: relative; overflow: hidden;
   }
 
-  /* Fixed Side Label with Integrated Hover Legend */
   .ticker-label {
-    background: var(--surface); padding: 0 15px; height: 100%;
+    background: var(--surface); padding: 0 12px; height: 100%;
     display: flex; flex-direction: column; justify-content: center;
-    font-family: var(--syne); font-size: 10px; color: var(--accent);
-    border-right: 1px solid var(--border); z-index: 20; text-transform: uppercase;
-    cursor: help; position: relative;
+    font-family: var(--syne); font-size: 9px; color: var(--accent);
+    border-right: 1px solid var(--border); z-index: 30; text-transform: uppercase;
+    box-shadow: 10px 0 15px rgba(0,0,0,0.5); /* Shadow to separate text */
   }
 
-  /* Sleek Legend Slide-out */
-  .legend-overlay {
-    position: absolute; left: 100%; top: 0; height: 100%; 
-    background: var(--surface); display: flex; align-items: center;
-    gap: 15px; padding: 0 20px; border-right: 1px solid var(--border);
-    transform: translateX(-100%); transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    z-index: 15; pointer-events: none;
-  }
-  .ticker-label:hover + .legend-overlay { transform: translateX(0); }
-
-  .legend-item { display: flex; align-items: center; font-size: 9px; gap: 6px; white-space: nowrap; color: var(--muted); }
-  .dot { width: 8px; height: 8px; border-radius: 50%; }
-
-  .ticker-content {
-    display: flex; white-space: nowrap; align-items: center;
-    padding-left: 20px; animation: tickerLoop 60s linear infinite;
+  /* The smooth scroll engine */
+  .ticker-move {
+    display: flex; white-space: nowrap;
+    animation: tickerSwim 45s linear infinite;
+    will-change: transform;
   }
 
-  .ticker-item { display: inline-flex; align-items: center; margin-right: 60px; font-size: 13px; }
-
-  .impact-dot { width: 10px; height: 10px; border-radius: 50%; margin-right: 12px; flex-shrink: 0; }
-  .impact-low { background: var(--green); box-shadow: 0 0 8px rgba(74, 222, 128, 0.3); }
-  .impact-med { background: var(--orange); box-shadow: 0 0 8px rgba(251, 146, 60, 0.3); }
-  .impact-high { background: var(--red); box-shadow: 0 0 12px rgba(248, 113, 113, 0.4); animation: pulseRed 1.5s infinite; }
-
-  .market-tag {
-    font-size: 9px; padding: 2px 6px; border-radius: 4px; margin-right: 10px;
-    font-weight: 700; background: var(--bg); border: 1px solid var(--border); color: var(--accent);
+  .ticker-item {
+    display: inline-flex; align-items: center;
+    margin-right: 50px; font-size: 12px;
   }
 
-  .pill-tomorrow { 
-    font-size: 9px; padding: 2px 6px; border-radius: 4px; margin-right: 10px;
-    color: var(--accent); border: 1px solid var(--accent); font-weight: 700;
+  .dot { width: 8px; height: 8px; border-radius: 50%; margin-right: 10px; flex-shrink:0; }
+  .tag { font-size: 9px; font-weight: 800; margin-right: 10px; color: var(--accent); opacity: 0.8; }
+  .time { color: var(--muted); margin-right: 10px; font-size: 10px; }
+
+  @keyframes tickerSwim {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
   }
 
-  .time-stamp { color: var(--muted); margin-right: 10px; font-size: 11px; font-weight: 500; }
-
-  @keyframes pulseRed { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-  @keyframes tickerLoop { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
-  .ticker-wrap:hover .ticker-content { animation-play-state: paused; }
+  /* Desktop/Mobile specific font-size adjustments */
+  @media (max-width: 600px) {
+    .ticker-item { font-size: 11px; margin-right: 30px; }
+    .ticker-label { font-size: 8px; padding: 0 8px; }
+    .ticker-move { animation-duration: 25s; } /* Faster on small screens to see more news */
+  }
 </style>
 </head>
 <body>
 
 <div class="ticker-wrap">
   <div class="ticker-label">
-    LIVE FEED
-    <span style="font-size:7px; opacity:0.6; margin-top:2px;">HOVER LEGEND</span>
+    LIVE<span>FEED</span>
   </div>
 
-  <div class="legend-overlay">
-    <div class="legend-item"><div class="dot impact-low"></div> LOW</div>
-    <div class="legend-item"><div class="dot impact-med"></div> MEDIUM</div>
-    <div class="legend-item"><div class="dot impact-high"></div> HIGH</div>
-  </div>
-
-  <div class="ticker-content" id="ticker-content">
-    <div class="ticker-item">Synchronizing with Global Timezones...</div>
+  <div class="ticker-move" id="track">
+    <div class="ticker-item">Initialising terminal stream...</div>
   </div>
 </div>
 
 <script>
-  const marketMap = [
-    { keywords: ['DOW', 'INDUSTRIAL', 'AUTOMOTIVE', 'FORD', 'TESLA', 'BOEING'], tag: 'DOW' },
-    { keywords: ['TECH', 'NASDAQ', 'NVIDIA', 'APPLE', 'GOOGLE', 'AI', 'SEMICONDUCTOR'], tag: 'NAS' },
-    { keywords: ['S&P', 'SPX', 'EQUITIES'], tag: 'S&P' },
-    { keywords: ['GOLD', 'XAU', 'SILVER', 'METAL'], tag: 'CMD' },
-    { keywords: ['OIL', 'CRUDE', 'ENERGY', 'OPEC'], tag: 'NRG' },
-    { keywords: ['BTC', 'ETH', 'CRYPTO', 'BITCOIN'], tag: 'CRY' },
-    { keywords: ['USD', 'FED', 'FOMC', 'POWELL', 'TREASURY'], tag: 'USD' }
-  ];
+  const tz = () => {
+    try { return Intl.DateTimeFormat().resolvedOptions().timeZone.split('/').pop().replace('_', ' '); }
+    catch(e) { return "EST"; }
+  };
 
-  // Timezone Detection Logic
-  function getUserTimezone() {
+  async function getNews() {
     try {
-      return Intl.DateTimeFormat().resolvedOptions().timeZone.split('/').pop().replace('_', ' ');
-    } catch (e) {
-      return "EST"; // Default fallback
-    }
+      const res = await fetch('https://api.rss2json.com/v1/api.json?rss_url=https://www.investing.com/rss/news_25.rss');
+      const data = await res.json();
+      if (data.status === 'ok') build(data.items);
+    } catch (e) { document.getElementById('track').innerHTML = '<div class="ticker-item">Connection lag... retrying</div>'; }
   }
 
-  async function updateTicker() {
-    const tickerContainer = document.getElementById('ticker-content');
-    try {
-      const response = await fetch('https://api.rss2json.com/v1/api.json?rss_url=https://www.investing.com/rss/news_25.rss');
-      const data = await response.json();
-      if (data.status === 'ok') render(data.items);
-    } catch (e) {
-      tickerContainer.innerHTML = '<div class="ticker-item">Fetching data...</div>';
-    }
-  }
-
-  function render(items) {
-    const container = document.getElementById('ticker-content');
+  function build(items) {
+    const track = document.getElementById('track');
     const now = new Date();
     const tomorrow = new Date(); tomorrow.setDate(now.getDate() + 1);
-    const tzLabel = getUserTimezone();
+    const zone = tz();
+
+    // Market keywords
+    const keys = { 'DOW': /DOW|FORD|BA|TESLA/, 'NAS': /TECH|NVDA|AAPL|GOOG|AI/, 'USD': /FED|FOMC|CPI|POWELL|RATE/ };
+
+    let content = '';
     
-    let html = '';
+    // Sort oldest to newest to ensure Today is first
+    const sorted = items.sort((a,b) => new Date(a.pubDate) - new Date(b.pubDate));
 
-    // Sort: Today's items first, then Tomorrow
-    items.sort((a, b) => new Date(a.pubDate) - new Date(b.pubDate));
-
-    items.forEach(item => {
-      const title = item.title.toUpperCase();
+    sorted.forEach(item => {
       const d = new Date(item.pubDate);
-      
-      // Only show Today and Tomorrow (filter out old news)
       if (d.getDate() !== now.getDate() && d.getDate() !== tomorrow.getDate()) return;
 
-      const isTomorrow = d.getDate() === tomorrow.getDate();
+      const isTom = d.getDate() === tomorrow.getDate();
+      const title = item.title.toUpperCase();
       
-      const market = marketMap.find(m => m.keywords.some(k => title.includes(k)));
-      const tag = market ? `<span class="market-tag">${market.tag}</span>` : '';
+      // Impact logic
+      let dot = '#4ade80'; // Low
+      if (/FED|FOMC|CPI|NFP|WAR/i.test(title)) dot = '#f87171'; // High
+      else if (/REPORT|INFLATION|JOBS/i.test(title)) dot = '#fb923c'; // Med
 
-      // 12-Hour Time Format
-      let hours = d.getHours();
-      const ampm = hours >= 12 ? 'PM' : 'AM';
-      hours = hours % 12;
-      hours = hours ? hours : 12;
-      const timeStr = `${hours}:${String(d.getMinutes()).padStart(2,'0')} ${ampm} ${tzLabel}`;
+      // Market Tag
+      let tag = '';
+      for (let k in keys) { if (keys[k].test(title)) tag = `<span class="tag">[${k}]</span>`; }
 
-      let impactClass = 'impact-low';
-      if (/FED|FOMC|CPI|RATE|POWELL|NFP|WAR|EARNINGS/i.test(title)) impactClass = 'impact-high';
-      else if (/DATA|REPORT|OUTLOOK|INFLATION|JOBS/i.test(title)) impactClass = 'impact-med';
+      // Time 12h
+      let h = d.getHours();
+      const m = String(d.getMinutes()).padStart(2,'0');
+      const p = h >= 12 ? 'PM' : 'AM';
+      h = h % 12 || 12;
 
-      html += `
+      content += `
         <div class="ticker-item">
-          <div class="impact-dot ${impactClass}"></div>
-          ${isTomorrow ? '<span class="pill-tomorrow">TOMORROW</span>' : ''}
+          <div class="dot" style="background:${dot}; box-shadow: 0 0 8px ${dot}66"></div>
+          ${isTom ? '<span class="tag" style="color:var(--accent)">TOMORROW</span>' : ''}
           ${tag}
-          <span class="time-stamp">${timeStr}</span>
+          <span class="time">${h}:${m} ${p} ${zone}</span>
           <span>${item.title}</span>
         </div>
       `;
     });
 
-    container.innerHTML = html + html;
+    // Double the content for a seamless loop
+    track.innerHTML = content + content;
   }
 
-  updateTicker();
-  setInterval(updateTicker, 600000);
+  getNews();
+  setInterval(getNews, 600000);
 </script>
 </body>
 </html>
