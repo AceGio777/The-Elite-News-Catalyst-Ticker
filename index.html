@@ -3,10 +3,9 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Elite Terminal | Final Reconstruction</title>
+<title>Elite Terminal | Final Stability Fix</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@700&display=swap" rel="stylesheet" />
 <style>
-  /* --- Core Layout --- */
   *{box-sizing:border-box;margin:0;padding:0}
   :root {
     --bg:#0e0e0f; --surface:#18181b; --border:#2a2a2e;
@@ -20,42 +19,31 @@
   .title { font-family:var(--syne); font-size:18px; font-weight:700; color:white; }
   .subtitle { font-size:9px; color:var(--muted); text-transform:uppercase; letter-spacing:0.1em; }
 
-  .feed-list { display: flex; flex-direction: column; gap: 15px; min-height: 450px; }
+  .feed-list { display: flex; flex-direction: column; gap: 15px; min-height: 400px; }
   
-  /* --- Event Cards --- */
   .event-card {
     background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
-    padding: 16px; position: relative; overflow: hidden; transition: 0.3s;
+    padding: 16px; position: relative; overflow: hidden;
   }
 
-  /* HIGH IMPACT: Fire Pulse */
-  .event-card.high { border-color: var(--red); box-shadow: 0 0 15px rgba(248, 113, 113, 0.1); }
+  /* Animations for Risk */
+  .event-card.high { border-color: var(--red); box-shadow: 0 0 10px rgba(248, 113, 113, 0.1); }
   .event-card.high::after {
     content: ''; position: absolute; inset: 0; border: 1px solid var(--red); border-radius: 12px;
-    animation: firePulse 1.5s infinite; pointer-events: none;
+    animation: fire 1.5s infinite; pointer-events: none;
   }
-  @keyframes firePulse { 0% { opacity: 0.1; } 50% { opacity: 0.4; } 100% { opacity: 0.1; } }
-
-  /* LOW IMPACT: Palm Silhouette */
-  .event-card.low { border-color: var(--green); }
-  .event-card.low::before {
-    content: '🌴'; position: absolute; right: 5px; bottom: 5px; font-size: 30px; opacity: 0.05;
-  }
+  @keyframes fire { 0%, 100% { opacity: 0.1; } 50% { opacity: 0.3; } }
 
   .meta-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
   .time-box { font-size: 11px; font-weight: 700; color: var(--accent); display: flex; align-items: center; gap: 8px; }
-  .event-title { font-size: 13px; line-height: 1.5; color: var(--text); margin-bottom: 8px; font-weight: 500; }
+  .event-title { font-size: 13px; line-height: 1.5; color: var(--text); font-weight: 500; }
   
-  .tag-row { display: flex; gap: 6px; flex-wrap: wrap; }
+  .tag-row { display: flex; gap: 6px; }
   .tag { font-size: 9px; padding: 2px 6px; border-radius: 4px; font-weight: 700; background: var(--bg); border: 1px solid var(--border); }
-  .tomorrow-tag { border-color: var(--accent); color: var(--accent); }
-  .symbol-tag { border-color: var(--muted); color: var(--text); background: rgba(255,255,255,0.05); }
-  .macro-tag { border-color: var(--red); color: var(--red); text-shadow: 0 0 5px var(--red); }
+  .macro-tag { border-color: var(--red); color: var(--red); }
 
-  /* Pagination Controls */
   .pagination { display: flex; justify-content: center; align-items: center; gap: 15px; margin-top: 25px; padding-top: 15px; border-top: 1px solid var(--border); }
-  .nav-btn { background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 11px; transition: 0.2s; }
-  .nav-btn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+  .nav-btn { background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 11px; }
   .nav-btn:disabled { opacity: 0.2; cursor: not-allowed; }
 </style>
 </head>
@@ -67,7 +55,7 @@
       <span class="title">Market Terminal</span><br>
       <span class="subtitle">Global Catalyst Feed</span>
     </div>
-    <span id="tz-display" style="font-size: 10px; color: var(--muted);">SYNCING...</span>
+    <span id="tz-display" style="font-size: 10px; color: var(--muted);">INITIALIZING</span>
   </div>
 
   <div id="feed" class="feed-list"></div>
@@ -85,22 +73,23 @@
   const itemsPerPage = 5;
 
   const symbolMap = [
-    { keys: /TRUMP|WHITE HOUSE|TARIFF|ADMINISTRATION|POTUS/i, tag: 'MACRO', type: 'macro' },
-    { keys: /S&P 500|SPX|S&P|BROAD MARKET/i, tag: 'SPX' },
-    { keys: /DOW|FORD|BA|BOEING|INDUSTRIAL/i, tag: 'DOW' },
-    { keys: /NASDAQ|TECH|NVIDIA|AI|MSFT|AAPL|GOOG/i, tag: 'NAS' },
-    { keys: /FED|FOMC|POWELL|RATE|CPI|INFLATION|USD/i, tag: 'USD' },
-    { keys: /BTC|ETH|CRYPTO|BITCOIN/i, tag: 'CRY' }
+    { keys: /TRUMP|WHITE HOUSE|TARIFF|POTUS/i, tag: 'MACRO', type: 'macro' },
+    { keys: /S&P 500|SPX|S&P|INDEX/i, tag: 'SPX' },
+    { keys: /DOW|FORD|BA|BOEING/i, tag: 'DOW' },
+    { keys: /NASDAQ|TECH|NVIDIA|AI|MSFT|AAPL/i, tag: 'NAS' },
+    { keys: /FED|FOMC|POWELL|RATE|CPI/i, tag: 'USD' },
+    { keys: /BTC|ETH|CRYPTO/i, tag: 'CRY' }
   ];
 
   async function fetchNews() {
     try {
-      const res = await fetch('https://api.rss2json.com/v1/api.json?rss_url=https://www.investing.com/rss/news_25.rss&count=50');
+      // Use a timestamp to bypass any caching issues
+      const res = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=https://www.investing.com/rss/news_25.rss&t=${Date.now()}`);
       const data = await res.json();
       
       if (data.status === 'ok') {
-        // SORT: Latest (Newest) first
-        allNews = data.items.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
+        // STRICT SORT: Highest time value (newest) to lowest (oldest)
+        allNews = data.items.sort((a, b) => new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime());
         
         const tz = Intl.DateTimeFormat().resolvedOptions().timeZone.split('/').pop().replace('_', ' ');
         document.getElementById('tz-display').textContent = tz;
@@ -108,43 +97,33 @@
         renderPage();
       }
     } catch (e) {
-      document.getElementById('feed').innerHTML = '<div style="text-align:center; padding:100px 0; color:var(--muted);">Terminal Connection Error</div>';
+      document.getElementById('feed').innerHTML = '<div style="text-align:center; padding:100px; color:var(--muted);">Data Stream Interrupted</div>';
     }
   }
 
   function changePage(dir) {
     currentPage += dir;
     renderPage();
-    window.scrollTo({top: 0, behavior: 'smooth'});
   }
 
   function renderPage() {
     const feed = document.getElementById('feed');
-    const now = new Date();
-    const tomorrow = new Date(); tomorrow.setDate(now.getDate() + 1);
-
     const start = (currentPage - 1) * itemsPerPage;
     const pagedItems = allNews.slice(start, start + itemsPerPage);
 
     document.getElementById('prevBtn').disabled = currentPage === 1;
-    document.getElementById('nextBtn').disabled = start + itemsPerPage >= allNews.length;
+    document.getElementById('nextBtn').disabled = (start + itemsPerPage >= allNews.length);
     document.getElementById('pageNum').textContent = `Page ${currentPage} of ${Math.ceil(allNews.length / itemsPerPage)}`;
 
     feed.innerHTML = pagedItems.map(item => {
       const d = new Date(item.pubDate);
       const title = item.title;
-      const isTom = d.getDate() === tomorrow.getDate();
       
       let impact = 'low';
       let emoji = '😎'; 
-      const upperTitle = title.toUpperCase();
-
-      if (/FED|FOMC|CPI|RATE|TRUMP|TARIFF|WAR|POWELL|NFP/i.test(upperTitle)) {
+      if (/FED|FOMC|CPI|RATE|TRUMP|TARIFF|WAR|POWELL/i.test(title.toUpperCase())) {
           impact = 'high';
           emoji = '😰';
-      } else if (/REPORT|INFLATION|JOBS|EARNINGS|PLAN/i.test(upperTitle)) {
-          impact = 'med';
-          emoji = '🧐';
       }
 
       let h = d.getHours();
@@ -163,14 +142,8 @@
       return `
         <div class="event-card ${impact}">
           <div class="meta-row">
-            <div class="time-box">
-                <span style="font-size:16px;">${emoji}</span>
-                ${h}:${m} ${p}
-            </div>
-            <div class="tag-row">
-              ${isTom ? '<span class="tag tomorrow-tag">TOMORROW</span>' : ''}
-              ${tags.join('')}
-            </div>
+            <div class="time-box"><span>${emoji}</span>${h}:${m} ${p}</div>
+            <div class="tag-row">${tags.join('')}</div>
           </div>
           <div class="event-title">${title}</div>
         </div>
