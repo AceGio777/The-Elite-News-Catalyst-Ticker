@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Elite Catalyst Sidebar</title>
+<title>Elite Terminal | Macro Edition</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@700&display=swap" rel="stylesheet" />
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
@@ -15,41 +15,41 @@
   }
   body{background:var(--bg); color:var(--text); font-family:var(--mono); padding:15px; min-height:100vh;}
 
-  .widget-container { width: 100%; max-width: 350px; margin: 0 auto; }
-
   .header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 12px; }
-  .title { font-family: var(--syne); font-size: 18px; color: var(--text); }
+  .title { font-family: var(--syne); font-size: 18px; font-weight:700; }
   .subtitle { font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; }
 
-  /* Feed List */
-  .feed-list { display: flex; flex-direction: column; gap: 10px; }
+  .feed-list { display: flex; flex-direction: column; gap: 12px; min-height: 400px; }
   
   .event-card {
-    background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
-    padding: 12px; position: relative; overflow: hidden; transition: 0.2s;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 14px; position: relative; overflow: hidden; transition: 0.2s;
+    animation: slideIn 0.3s ease-out;
   }
-  .event-card:hover { border-color: var(--muted); }
+  @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
   .impact-strip { position: absolute; left: 0; top: 0; bottom: 0; width: 3px; }
   .high { background: var(--red); box-shadow: 0 0 10px var(--red); }
   .med { background: var(--orange); }
   .low { background: var(--green); }
 
-  .meta-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
-  .time-box { font-size: 10px; font-weight: 500; color: var(--accent); display: flex; align-items: center; gap: 5px; }
-  .tz-label { font-size: 8px; color: var(--muted); background: var(--bg); padding: 1px 4px; border-radius: 3px; }
+  .meta-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .time-box { font-size: 11px; font-weight: 500; color: var(--accent); }
   
-  .event-title { font-size: 12px; line-height: 1.4; color: var(--text); margin-bottom: 4px; }
+  .event-title { font-size: 13px; line-height: 1.5; color: var(--text); margin-bottom: 8px; }
   
-  .tag-row { display: flex; gap: 6px; }
-  .tag { font-size: 8px; padding: 2px 5px; border-radius: 4px; font-weight: 700; background: var(--bg); border: 1px solid var(--border); }
+  .tag-row { display: flex; gap: 6px; flex-wrap: wrap; }
+  .tag { font-size: 9px; padding: 2px 6px; border-radius: 4px; font-weight: 700; background: var(--bg); border: 1px solid var(--border); }
   .tomorrow-tag { border-color: var(--accent); color: var(--accent); }
-  .market-tag { border-color: var(--muted); color: var(--muted); text-transform: uppercase; }
+  .symbol-tag { border-color: var(--muted); color: var(--text); background: rgba(255,255,255,0.05); }
+  .macro-tag { border-color: var(--red); color: var(--red); box-shadow: 0 0 5px rgba(248, 113, 113, 0.2); }
 
-  /* Legend Footer */
-  .legend { margin-top: 25px; display: flex; justify-content: space-around; padding-top: 15px; border-top: 1px solid var(--border); }
-  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 8px; color: var(--muted); text-transform: uppercase; }
-  .dot { width: 6px; height: 6px; border-radius: 50%; }
+  /* Pagination */
+  .pagination { display: flex; justify-content: center; align-items: center; gap: 15px; margin-top: 25px; padding-top: 15px; border-top: 1px solid var(--border); }
+  .nav-btn { background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 11px; transition: 0.2s; }
+  .nav-btn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+  .nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+  .page-num { font-size: 11px; color: var(--muted); }
 </style>
 </head>
 <body>
@@ -57,85 +57,92 @@
 <div class="widget-container">
   <div class="header">
     <div>
-      <span class="title">Market Catalysts</span><br>
-      <span class="subtitle">Live Terminal Feed</span>
+      <span class="title">Market Terminal</span><br>
+      <span class="subtitle">Macro News Engine</span>
     </div>
-    <span id="tz-display" class="tz-label">EST</span>
+    <span id="tz-display" style="font-size: 10px; color: var(--muted);">EST</span>
   </div>
 
   <div id="feed" class="feed-list">
-    <div style="text-align:center; padding:40px; color:var(--muted); font-size:11px;">Connecting to data stream...</div>
+    <div style="text-align:center; padding:100px 0; color:var(--muted);">Parsing Global News...</div>
   </div>
 
-  <div class="legend">
-    <div class="legend-item"><div class="dot" style="background:var(--green)"></div> Low</div>
-    <div class="legend-item"><div class="dot" style="background:var(--orange)"></div> Medium</div>
-    <div class="legend-item"><div class="dot" style="background:var(--red)"></div> High</div>
+  <div class="pagination">
+    <button id="prevBtn" class="nav-btn" onclick="changePage(-1)">← Newer</button>
+    <span id="pageNum" class="page-num">Page 1</span>
+    <button id="nextBtn" class="nav-btn" onclick="changePage(1)">Older →</button>
   </div>
 </div>
 
 <script>
-  const marketMap = [
-    { keys: /FED|FOMC|POWELL|USD|TREASURY/, tag: 'USD' },
-    { keys: /TECH|NASDAQ|NVDA|AAPL|GOOG|AI/, tag: 'NAS' },
-    { keys: /DOW|FORD|BA|GM|INDUSTRIAL/, tag: 'DOW' },
-    { keys: /GOLD|XAU|SILVER|METAL/, tag: 'CMD' },
-    { keys: /OIL|CRUDE|ENERGY|OPEC/, tag: 'NRG' }
+  // Advanced Macro Mapping
+  const symbolMap = [
+    { keys: /TRUMP|WHITE HOUSE|ADMINISTRATION|TARIFF|ELECTION|U.S. GOVT/i, tag: 'MACRO', type: 'macro' },
+    { keys: /S&P 500|SPX|S&P|BROAD MARKET|INDEX/i, tag: 'SPX' },
+    { keys: /DOW|FORD|BA|BOEING|INDUSTRIAL|BLUE CHIP/i, tag: 'DOW' },
+    { keys: /NASDAQ|TECH|NVIDIA|AI|CHIP|SEMICONDUCTOR|MSFT|AAPL/i, tag: 'NAS' },
+    { keys: /FED|FOMC|POWELL|RATE|CPI|INFLATION|USD|DOLLAR/i, tag: 'USD' },
+    { keys: /GOLD|XAU|SILVER|METAL/i, tag: 'XAU' },
+    { keys: /OIL|CRUDE|ENERGY|OPEC/i, tag: 'NRG' },
+    { keys: /BTC|ETH|CRYPTO|BITCOIN/i, tag: 'CRY' }
   ];
 
-  const getTZ = () => {
-    try { return Intl.DateTimeFormat().resolvedOptions().timeZone.split('/').pop().replace('_', ' '); }
-    catch(e) { return "EST"; }
-  };
+  let allNews = [];
+  let currentPage = 1;
+  const itemsPerPage = 5;
 
-  async function updateFeed() {
-    const feed = document.getElementById('feed');
-    const tzLabel = getTZ();
-    document.getElementById('tz-display').textContent = tzLabel;
-
+  async function fetchNews() {
     try {
       const res = await fetch('https://api.rss2json.com/v1/api.json?rss_url=https://www.investing.com/rss/news_25.rss');
       const data = await res.json();
-      if (data.status === 'ok') render(data.items, tzLabel);
+      if (data.status === 'ok') {
+        allNews = data.items;
+        renderPage();
+      }
     } catch (e) {
-      feed.innerHTML = '<div style="text-align:center; font-size:10px; color:var(--red);">Feed disconnected. Check internet.</div>';
+      document.getElementById('feed').innerHTML = '<div style="text-align:center; padding:50px; color:var(--red);">Feed Offline</div>';
     }
   }
 
-  function render(items, tz) {
+  function changePage(dir) {
+    currentPage += dir;
+    renderPage();
+  }
+
+  function renderPage() {
     const feed = document.getElementById('feed');
     const now = new Date();
     const tomorrow = new Date(); tomorrow.setDate(now.getDate() + 1);
-    
-    // Filter and Sort: Today and Tomorrow only
-    const events = items
-      .filter(item => {
-        const d = new Date(item.pubDate);
-        return d.getDate() === now.getDate() || d.getDate() === tomorrow.getDate();
-      })
-      .sort((a,b) => new Date(a.pubDate) - new Date(b.pubDate));
 
-    if (events.length === 0) {
-      feed.innerHTML = '<div style="text-align:center; font-size:11px; color:var(--muted); padding:20px;">No catalysts remaining for today/tomorrow.</div>';
-      return;
-    }
+    const start = (currentPage - 1) * itemsPerPage;
+    const pagedItems = allNews.slice(start, start + itemsPerPage);
 
-    feed.innerHTML = events.slice(0, 8).map(item => {
+    document.getElementById('prevBtn').disabled = currentPage === 1;
+    document.getElementById('nextBtn').disabled = start + itemsPerPage >= allNews.length;
+    document.getElementById('pageNum').textContent = `Page ${currentPage}`;
+
+    feed.innerHTML = pagedItems.map(item => {
       const d = new Date(item.pubDate);
-      const title = item.title.toUpperCase();
+      const title = item.title;
       const isTom = d.getDate() === tomorrow.getDate();
       
       let impact = 'low';
-      if (/FED|FOMC|CPI|RATE|NFP|POWELL/i.test(title)) impact = 'high';
-      else if (/DATA|REPORT|JOBS|INFLATION/i.test(title)) impact = 'med';
+      if (/FED|FOMC|CPI|RATE|TRUMP|TARIFF|WAR|NFP/i.test(title)) impact = 'high';
+      else if (/REPORT|INFLATION|JOBS|EARNINGS/i.test(title)) impact = 'med';
 
       let h = d.getHours();
       const m = String(d.getMinutes()).padStart(2,'0');
       const p = h >= 12 ? 'PM' : 'AM';
       h = h % 12 || 12;
 
-      let mktTag = '';
-      for (let m of marketMap) { if (m.keys.test(title)) mktTag = `<span class="tag market-tag">${m.tag}</span>`; }
+      let tags = [];
+      for (let s of symbolMap) { 
+        if (s.keys.test(title)) {
+            const cls = s.type === 'macro' ? 'tag macro-tag' : 'tag symbol-tag';
+            tags.push(`<span class="${cls}">${s.tag}</span>`); 
+        }
+      }
+      if (tags.length === 0) tags.push(`<span class="tag symbol-tag" style="opacity:0.5;">MKT</span>`);
 
       return `
         <div class="event-card">
@@ -144,18 +151,17 @@
             <div class="time-box">${h}:${m} ${p}</div>
             <div class="tag-row">
               ${isTom ? '<span class="tag tomorrow-tag">TOMORROW</span>' : ''}
-              ${mktTag}
+              ${tags.join('')}
             </div>
           </div>
-          <div class="event-title">${item.title}</div>
+          <div class="event-title">${title}</div>
         </div>
       `;
     }).join('');
   }
 
-  updateTicker = updateFeed; // Backwards compat
-  updateFeed();
-  setInterval(updateFeed, 600000);
+  fetchNews();
+  setInterval(fetchNews, 600000);
 </script>
 </body>
 </html>
